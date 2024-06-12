@@ -101,22 +101,6 @@ screen status:
         label "Money: [money] coins" text_size 20
         label "Weather: [weather]" text_size 20
 
-screen farm_status:
-    frame:
-        background "#0008"
-        xalign 0.5
-        yalign 0.5
-        has vbox
-        text "Farm Status" size 30 xalign 0.5
-        for i, plot in enumerate(farm):
-            vbox:
-                text "[i+1]. [plot['crop'].capitalize()] - [plot['days_left']] days left" size 20
-                hbox:
-                    text "Watered: [ 'Yes' if plot['watered'] else 'No']\n"
-                    text "Fertilized: [ 'Yes' if plot['fertilized'] else 'No']\n"
-                    text "Pests: [ 'Yes' if plot['pests'] else 'No']\n"
-                text " "
-                
 # script.rpy
 label start:
     $ player_name = renpy.input("Enter your name:").strip()
@@ -129,7 +113,7 @@ label start:
     p "Welcome to your farm, [player_name]!"
     p "You have [money] gold coins and it's Day [day]."
     
-    call start_game from _call_start_game
+    call start_game
 
 label start_game:
     show screen status
@@ -156,13 +140,7 @@ label start_game:
 
 label plant_crops:
     show screen status
-    $ planted_crops = sum([1 for plot in farm])
-    if planted_crops >= 5:
-        p "You have reached the maximum number of crops you can plant."
-        jump start_game
-    else:
-        p "You have [5- planted_crops] slots available to plant crops."
-        p "What would you like to plant?"
+    p "What would you like to plant?"
     
     menu:
         "Plant Wheat (5 gold, Profit: 10, Days: 3)":
@@ -171,21 +149,21 @@ label plant_crops:
                 p "You planted wheat."
             else:
                 p "You don't have enough money to plant wheat."
-            jump view_farm
+            jump start_game
         "Plant Corn (8 gold, Profit: 20, Days: 5)":
             $ success = plant_crop("corn")
             if success:
                 p "You planted corn."
             else:
                 p "You don't have enough money to plant corn."
-            jump view_farm
+            jump start_game
         "Plant Carrot (7 gold, Profit: 25, Days: 4)":
             $ success = plant_crop("carrot")
             if success:
                 p "You planted carrot."
             else:
                 p "You don't have enough money to plant carrot."
-            jump view_farm
+            jump start_game
         "Go back":
             jump start_game
 
@@ -239,9 +217,14 @@ label remove_pests:
 
 label view_farm:
     show screen status
-    show screen farm_status
-    $ renpy.pause(5)  # Pause for 5 seconds to allow the player to view the farm status
-    hide screen farm_status
+    p "Here is the status of your farm:"
+    $ crop_status = "\n".join([f"{i+1}. {plot['crop'].capitalize()} - {plot['days_left']} days left (Watered: {'Yes' if plot['watered'] else 'No'}, Fertilized: {'Yes' if plot['fertilized'] else 'No'}, Pests: {'Yes' if plot['pests'] else 'No'})" for i, plot in enumerate(farm)])
+    if crop_status:
+        $ crop_status_text = crop_status
+    else:
+        $ crop_status_text = "Your farm is empty."
+    p "[crop_status_text]"
+    
     jump start_game
 
 label win_game:
