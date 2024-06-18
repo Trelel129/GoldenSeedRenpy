@@ -1,5 +1,8 @@
 ﻿# Define the main character template
 define p = Character("[player_name]", color="#a1c4ff")
+# Define the current crop
+
+# set gui textbox align
 
 # Initialize variables
 init python:
@@ -8,9 +11,10 @@ init python:
     day = 1
     
     crops = {
-        "wheat": {"planted": 0, "harvested": 0, "days_to_grow": 3, "profit": 10, "price": 5},
-        "corn": {"planted": 0, "harvested": 0, "days_to_grow": 5, "profit": 20, "price": 8},
-        "carrot": {"planted": 0, "harvested": 0, "days_to_grow": 4, "profit": 25, "price": 7},
+        "wheat": {"planted": 0, "harvested": 0, "days_to_grow": 3, "profit": 15, "price": 5},
+        "potato": {"planted": 0, "harvested": 0, "days_to_grow": 5, "profit": 40, "price": 8},
+        "carrot": {"planted": 0, "harvested": 0, "days_to_grow": 4, "profit": 28, "price": 7},
+        "pumpkin": {"planted": 0, "harvested": 0, "days_to_grow": 7, "profit": 25, "price": 10},
         "golden_seed": {"planted": 0, "harvested": 0, "days_to_grow": 1, "profit": 9999, "price": 9999},
     }
 
@@ -102,20 +106,21 @@ screen status:
         label "Weather: [weather]" text_size 20
 
 screen farm_status:
+    zorder 1
     frame:
-        background "#0008"
+        # background "#0008"
         xalign 0.5
         yalign 0.5
         has vbox
-        text "Farm Status" size 30 xalign 0.5
+        # text "Farm Status" size 20 xalign 0.5
         for i, plot in enumerate(farm):
             vbox:
                 text "[i+1]. [plot['crop'].capitalize()] - [plot['days_left']] days left" size 20
                 hbox:
-                    text "Watered: [ 'Yes' if plot['watered'] else 'No']\n"
-                    text "Fertilized: [ 'Yes' if plot['fertilized'] else 'No']\n"
-                    text "Pests: [ 'Yes' if plot['pests'] else 'No']\n"
-                text " "
+                    text "Watered: [ 'Yes |' if plot['watered'] else 'No |']"
+                    text "Fertilized: [ 'Yes |' if plot['fertilized'] else 'No |']"
+                    text "Pests: [ 'Yes' if plot['pests'] else 'No']"
+                text "\n"
                 
 # script.rpy
 label start:
@@ -172,12 +177,12 @@ label plant_crops:
             else:
                 p "You don't have enough money to plant wheat."
             jump view_farm
-        "Plant Corn (8 gold, Profit: 20, Days: 5)":
-            $ success = plant_crop("corn")
+        "Plant Potato (8 gold, Profit: 20, Days: 5)":
+            $ success = plant_crop("potato")
             if success:
-                p "You planted corn."
+                p "You planted potato."
             else:
-                p "You don't have enough money to plant corn."
+                p "You don't have enough money to plant potato."
             jump view_farm
         "Plant Carrot (7 gold, Profit: 25, Days: 4)":
             $ success = plant_crop("carrot")
@@ -185,6 +190,20 @@ label plant_crops:
                 p "You planted carrot."
             else:
                 p "You don't have enough money to plant carrot."
+            jump view_farm
+        "Plant Pumpkin (7 gold, Profit: 25, Days: 4)":
+            $ success = plant_crop("pumpkin")
+            if success:
+                p "You planted pumpkin."
+            else:
+                p "You don't have enough money to plant pumpkin."
+            jump view_farm
+        "Plant Golden Seed (9999 gold, Profit: 9999, Days: 1)" if money >= 999:
+            $ success = plant_crop("golden_seed")
+            if success:
+                p "You planted the Golden Seed."
+            else:
+                p "You don't have enough money to plant the Golden Seed."
             jump view_farm
         "Go back":
             jump start_game
@@ -212,7 +231,7 @@ label fertilize_crops:
     if choices:
         $ choice = renpy.input("Choose a crop to fertilize:\n" + "\n".join(choices))
         $ index = int(choice) - 1
-        if 0 <= index < len(farm):
+        if 0 < index < len(farm):
             $ fertilize_crop(index)
             p "You fertilized the crop."
         else:
@@ -228,7 +247,7 @@ label remove_pests:
     if choices:
         $ choice = renpy.input("Choose a crop to treat for pests:\n" + "\n".join(choices))
         $ index = int(choice) - 1
-        if 0 <= index < len(farm):
+        if 0 < index < len(farm):
             $ remove_pests(index)
             p "You removed pests from the crop."
         else:
@@ -238,7 +257,7 @@ label remove_pests:
     jump start_game
 
 label view_farm:
-    show screen status
+    hide screen status
     show screen farm_status
     $ renpy.pause(5)  # Pause for 5 seconds to allow the player to view the farm status
     hide screen farm_status
@@ -247,6 +266,8 @@ label view_farm:
 label win_game:
     scene black
     show screen status
+    p "Your final score is: [money] gold coins."
+    p "You have successfully managed your farm for [day] days."
     p "Congratulations! You have harvested the Golden Seed and won the game!"
     $ renpy.pause(5)
     $ renpy.quit()
